@@ -50,7 +50,7 @@ class LocalPostManagement {
                     .split('#')[3]
                     .replaceAll('_', ':')
                     .replaceAll('--', '.')),
-            status: file.path.split('#')[4],
+            status: fileName.split('#')[4],
             filePath: file.path,
           ));
         } catch (e) {
