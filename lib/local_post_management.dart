@@ -40,8 +40,16 @@ class LocalPostManagement {
           queue.add(QueueModel(
             id: fileName.split('#')[0],
             name: file.path.split('#')[1],
-            createdDate: DateTime.parse(fileName.split('#')[2].replaceAll('_', ':')),
-            uploadedDate: fileName.split('#')[3] == '' ? null : DateTime.parse(fileName.split('#')[3].replaceAll('_', ':')),
+            createdDate: DateTime.parse(fileName
+                .split('#')[2]
+                .replaceAll('_', ':')
+                .replaceAll('--', '.')),
+            uploadedDate: fileName.split('#')[3] == ''
+                ? null
+                : DateTime.parse(fileName
+                    .split('#')[3]
+                    .replaceAll('_', ':')
+                    .replaceAll('--', '.')),
             status: file.path.split('#')[4],
             filePath: file.path,
           ));
@@ -56,10 +64,13 @@ class LocalPostManagement {
   Future<QueueModel> addQueue({
     required String? name,
     required PostModel postModel,
-  }){
+  }) {
     //format penamaan file [id]#[name]#[createdDate]#[uploadedDate]#[status].json
     String id = getNewId();
-    String createdDate = DateTime.now().toIso8601String().replaceAll(':', '_');
+    String createdDate = DateTime.now()
+        .toIso8601String()
+        .replaceAll(':', '_')
+        .replaceAll('.', '--');
     String status = 'pending';
     String fileName = '$id#$name#$createdDate##$status.json';
     //buat file baru
@@ -70,7 +81,8 @@ class LocalPostManagement {
         return QueueModel(
           id: id,
           name: name,
-          createdDate: DateTime.parse(createdDate.replaceAll('_', ':')),
+          createdDate: DateTime.parse(
+              createdDate.replaceAll('_', ':').replaceAll('--', '.')),
           uploadedDate: null,
           status: status,
           filePath: value.path,
