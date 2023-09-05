@@ -1,14 +1,18 @@
 class PostModel{
   Uri? url;
-  Map<String,dynamic> headers = {};
-  Map<String,dynamic> query = {};
+  Map<String,String> headers = {};
+  Map<String,String> query = {};
   Map<String,dynamic> body = {};
+  DateTime? lastTryDate;
+  String? lastError;
 
   PostModel({
     this.url,
     this.headers = const {},
     this.query = const {},
     this.body = const {},
+    this.lastTryDate,
+    this.lastError,
   });
 
   PostModel.fromJson(Map<String, dynamic> json) {
@@ -16,6 +20,8 @@ class PostModel{
     headers = json['headers'];
     query = json['query'];
     body = json['body'];
+    lastTryDate = json['lastTryDate'] == null ? null : DateTime.parse(json['lastTryDate']);
+    lastError = json['lastError'];
   }
 
   Map<String, dynamic> toJson() {
@@ -24,6 +30,8 @@ class PostModel{
     data['headers'] = headers;
     data['query'] = query;
     data['body'] = body;
+    data['lastTryDate'] = lastTryDate?.toIso8601String();
+    data['lastError'] = lastError;
     return data;
   }
 }

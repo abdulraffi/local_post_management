@@ -2,7 +2,12 @@ library local_post_management;
 
 export 'queue_model.dart';
 export 'post_model.dart';
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
+import 'package:local_post_management/error_handling_util.dart';
+import 'package:local_post_management/network.dart';
 import 'package:local_post_management/post_model.dart';
 import 'package:local_post_management/queue_model.dart';
 import 'package:path_provider/path_provider.dart';
@@ -11,6 +16,10 @@ import 'dart:io';
 /// A Calculator.
 class LocalPostManagement {
   Directory? directory;
+  QueueStatus queueStatus = QueueStatus.idle;
+  List<QueueModel> queue = [];
+  StreamController<List<QueueModel>> queueController =
+      StreamController<List<QueueModel>>.broadcast();
 
   LocalPostManagement();
 
@@ -74,24 +83,103 @@ class LocalPostManagement {
     String status = 'pending';
     String fileName = '$id#$name#$createdDate##$status.json';
     //buat file baru
-    return File('${directory!.path}/$fileName').create().then((value) {
-      //tulis data ke file
-      return value.writeAsString(postModel.toJson().toString()).then((value) {
-        //buat QueueModel
-        return QueueModel(
-          id: id,
-          name: name,
-          createdDate: DateTime.parse(
-              createdDate.replaceAll('_', ':').replaceAll('--', '.')),
-          uploadedDate: null,
-          status: status,
-          filePath: value.path,
-        );
-      });
+    return File('${directory!.path}/$fileName').create().then(
+      (value) {
+        //tulis data ke file
+        return value.writeAsString(postModel.toJson().toString()).then((value) {
+          //buat QueueModel
+          return QueueModel(
+            id: id,
+            name: name,
+            createdDate: DateTime.parse(
+                createdDate.replaceAll('_', ':').replaceAll('--', '.')),
+            uploadedDate: null,
+            status: status,
+            filePath: value.path,
+          );
+        });
+      },
+    );
+  }
+
+  //get queue and add to queue
+  void loadQueue() {
+    getQueue().then((value) {
+      queue = value;
+      queueController.add(queue);
     });
+  }
+
+  //add and load queue
+  Future<QueueModel> addAndLoadQueue({
+    required String? name,
+    required PostModel postModel,
+  }) {
+    return addQueue(name: name, postModel: postModel).then((value) {
+      queue.add(value);
+      queueController.add(queue);
+      return value;
+    });
+  }
+
+  //run queue, mulai menjalankan antrian
+  void startQueue() {
+    if (queueStatus == QueueStatus.running) {
+      return;
+    } else {
+      queueStatus = QueueStatus.running;
+      runQueue();
+    }
+  }
+
+  //stop queue, stop menjalankan antrian
+  void stopQueue() {
+    queueStatus = QueueStatus.idle;
+  }
+
+  //run queue, mulai menjalankan antrian
+  void runQueue() {
+    if (queueStatus == QueueStatus.running) {
+      //ambil antrian pertama
+      QueueModel queueModel =
+          queue.firstWhere((element) => element.status == 'pending');
+      //ubah status antrian menjadi running
+      queueModel.status = 'running';
+      //update status antrian
+      queueController.add(queue);
+      //jalankan antrian
+      //read post data model from file
+      File(queueModel.filePath ?? "").readAsString().then((value) {
+        //upload post data model
+        PostModel postModel = PostModel.fromJson(json.decode(value));
+        Network.post(
+          url: postModel.url!,
+          body: postModel.body,
+          headers: postModel.headers,
+          querys: postModel.query,
+        ).then((value) {
+          //update sttus antrian menjadi success
+          queueModel.status = 'success';
+          queueModel.uploadedDate = DateTime.now();
+          //update status antrian
+          queueController.add(queue);
+          //hapus file antrian
+          File(queueModel.filePath ?? "").deleteSync();
+          //hapus antrian dari list antrian
+          queue.remove(queueModel);
+          //jalankan antrian berikutnya
+          runQueue();
+        }).catchError((onError) {
+          postModel.lastError = ErrorHandlingUtil.handleApiError(onError);
+          postModel.lastTryDate = DateTime.now();
+        });
+      });
+    }
   }
 
   static String getNewId() {
     return "${DateTime.now().millisecondsSinceEpoch.toInt()}";
   }
 }
+
+enum QueueStatus { idle, running }
