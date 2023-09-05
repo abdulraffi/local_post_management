@@ -23,7 +23,9 @@ class LocalPostManagement {
   StreamController<QueueStatus> queueStatusController =
       StreamController<QueueStatus>.broadcast();
 
-  LocalPostManagement();
+  LocalPostManagement() {
+    queueStatusController.add(queueStatus);
+  }
 
   Future<void> initialize() {
     return getApplicationDocumentsDirectory().then((value) {
