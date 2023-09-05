@@ -28,6 +28,7 @@ class LocalPostManagement {
   }
 
   Future<void> initialize() {
+    queueStatusController.add(queueStatus);
     return getApplicationDocumentsDirectory().then((value) {
       //chek apakah directory 'localpostqueue' sudah ada
       directory = Directory('${value.path}/localpostqueue');
