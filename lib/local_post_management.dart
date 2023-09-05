@@ -158,7 +158,7 @@ class LocalPostManagement {
       //read post data model from file
       File(queueModel.filePath ?? "").readAsString().then((value) {
         //upload post data model
-        PostModel postModel = PostModel.fromJson(json.decode(json.encode(value)));
+        PostModel postModel = PostModel.fromJson(json.decode(value));
         Network.post(
           url: postModel.url!,
           body: postModel.body,
