@@ -186,9 +186,11 @@ class LocalPostManagement {
             });
           } catch (e) {
             queueModel.status = "parse_error";
+            debugPrint(value);
             queueModel.uploadedDate = DateTime.now();
             //update status antrian
             queueController.add(queue);
+            runQueue();
           }
         },
       );
