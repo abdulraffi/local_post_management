@@ -20,6 +20,8 @@ class LocalPostManagement {
   List<QueueModel> queue = [];
   StreamController<List<QueueModel>> queueController =
       StreamController<List<QueueModel>>.broadcast();
+  StreamController<QueueStatus> queueStatusController =
+      StreamController<QueueStatus>.broadcast();
 
   LocalPostManagement();
 
@@ -128,6 +130,7 @@ class LocalPostManagement {
       return;
     } else {
       queueStatus = QueueStatus.running;
+      queueStatusController.add(queueStatus);
       runQueue();
     }
   }
@@ -135,6 +138,7 @@ class LocalPostManagement {
   //stop queue, stop menjalankan antrian
   void stopQueue() {
     queueStatus = QueueStatus.idle;
+    queueStatusController.add(queueStatus);
   }
 
   //run queue, mulai menjalankan antrian
