@@ -91,7 +91,7 @@ class LocalPostManagement {
     return File('${directory!.path}/$fileName').create().then(
       (value) {
         //tulis data ke file
-        return value.writeAsString(postModel.toJson().toString()).then((value) {
+        return value.writeAsString(jsonEncode(postModel.toJson())).then((value) {
           //buat QueueModel
           return QueueModel(
             id: id,
@@ -158,7 +158,7 @@ class LocalPostManagement {
       //read post data model from file
       File(queueModel.filePath ?? "").readAsString().then((value) {
         //upload post data model
-        PostModel postModel = PostModel.fromJson(json.decode(value));
+        PostModel postModel = PostModel.fromJson(json.decode(json.encode(value)));
         Network.post(
           url: postModel.url!,
           body: postModel.body,
