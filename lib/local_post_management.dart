@@ -91,7 +91,9 @@ class LocalPostManagement {
     return File('${directory!.path}/$fileName').create().then(
       (value) {
         //tulis data ke file
-        return value.writeAsString(jsonEncode(postModel.toJson())).then((value) {
+        return value
+            .writeAsString(jsonEncode(postModel.toJson()))
+            .then((value) {
           //buat QueueModel
           return QueueModel(
             id: id,
@@ -156,31 +158,40 @@ class LocalPostManagement {
       queueController.add(queue);
       //jalankan antrian
       //read post data model from file
-      File(queueModel.filePath ?? "").readAsString().then((value) {
-        //upload post data model
-        PostModel postModel = PostModel.fromJson(json.decode(value));
-        Network.post(
-          url: postModel.url!,
-          body: postModel.body,
-          headers: postModel.headers,
-          querys: postModel.query,
-        ).then((value) {
-          //update sttus antrian menjadi success
-          queueModel.status = 'success';
-          queueModel.uploadedDate = DateTime.now();
-          //update status antrian
-          queueController.add(queue);
-          //hapus file antrian
-          File(queueModel.filePath ?? "").deleteSync();
-          //hapus antrian dari list antrian
-          queue.remove(queueModel);
-          //jalankan antrian berikutnya
-          runQueue();
-        }).catchError((onError) {
-          postModel.lastError = ErrorHandlingUtil.handleApiError(onError);
-          postModel.lastTryDate = DateTime.now();
-        });
-      });
+      File(queueModel.filePath ?? "").readAsString().then(
+        (value) {
+          //upload post data model
+          try {
+            PostModel postModel = PostModel.fromJson(json.decode(value));
+            Network.post(
+              url: postModel.url!,
+              body: postModel.body,
+              headers: postModel.headers,
+              querys: postModel.query,
+            ).then((value) {
+              //update sttus antrian menjadi success
+              queueModel.status = 'success';
+              queueModel.uploadedDate = DateTime.now();
+              //update status antrian
+              queueController.add(queue);
+              //hapus file antrian
+              File(queueModel.filePath ?? "").deleteSync();
+              //hapus antrian dari list antrian
+              queue.remove(queueModel);
+              //jalankan antrian berikutnya
+              runQueue();
+            }).catchError((onError) {
+              postModel.lastError = ErrorHandlingUtil.handleApiError(onError);
+              postModel.lastTryDate = DateTime.now();
+            });
+          } catch (e) {
+            queueModel.status = "parse_error";
+            queueModel.uploadedDate = DateTime.now();
+            //update status antrian
+            queueController.add(queue);
+          }
+        },
+      );
     }
   }
 
