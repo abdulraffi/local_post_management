@@ -23,18 +23,20 @@ class LocalPostManagement {
   StreamController<QueueStatus> queueStatusController =
       StreamController<QueueStatus>.broadcast();
   late final bool isSequential;
+  late final String name;
 
   LocalPostManagement() {
     queueStatusController.add(queueStatus);
   }
 
-  Future<void> initialize([bool isSequential = true]) {
+  Future<void> initialize(
+      [bool isSequential = true, String name = 'localpostqueue']) {
     //set sequential
     this.isSequential = isSequential;
     queueStatusController.add(queueStatus);
     return getApplicationDocumentsDirectory().then((value) {
       //chek apakah directory 'localpostqueue' sudah ada
-      directory = Directory('${value.path}/localpostqueue');
+      directory = Directory('${value.path}/$name');
       if (!directory!.existsSync()) {
         //jika belum ada, buat directory 'antrian'
         directory!.createSync();
