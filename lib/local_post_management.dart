@@ -251,9 +251,6 @@ class LocalPostManagement {
       File(queueModel.filePath ?? "")
           .renameSync('${directory!.path}/$fileName');
 
-      //delete data yang ditemukan dari antrian
-      queue.remove(queueModel);
-
       //notify ke controller
       queueController.add(queue);
     } catch (e) {
