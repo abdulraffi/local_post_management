@@ -27,15 +27,19 @@ class QueueModel {
       var json = jsonDecode(value);
       //convert to PostModel
       return PostModel.fromJson(json);
-    }).catchError((onError){
+    }).catchError((onError) {
       throw onError;
     });
   }
 
-  PostModel get readData{
-    //baca file dari file path
-    String data = File(filePath!).readAsStringSync();
-    //convert ke PostModel
-    return PostModel.fromJson(jsonDecode(data));
+  PostModel get readData {
+    try {
+      //baca file dari file path
+      String data = File(filePath!).readAsStringSync();
+      //convert ke PostModel
+      return PostModel.fromJson(jsonDecode(data));
+    } catch (e) {
+      return PostModel();
+    }
   }
 }
