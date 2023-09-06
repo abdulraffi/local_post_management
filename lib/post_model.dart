@@ -18,17 +18,17 @@ class PostModel {
   PostModel.fromJson(Map<String, dynamic> json) {
     url = Uri.parse(json['url']);
     try {
-      headers = json['headers'] as Map<String, String>;
+      headers = json['headers']?.cast<String, String>() ?? {};
     } catch (e) {
       headers = {};
     }
     try {
-      query = json['query'] as Map<String, String>;
+      query = json['query']?.cast<String, String>() ?? {};
     } catch (e) {
       query = {};
     }
     try {
-      body = json['body'] as Map<String, dynamic>;
+      body = json['body']?.cast<String, dynamic>() ?? {};
     } catch (e) {
       body = {};
     }
