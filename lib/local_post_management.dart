@@ -250,6 +250,9 @@ class LocalPostManagement {
           '${queueModel.id}#${queueModel.name}#${queueModel.createdDate!.toIso8601String().replaceAll(':', '_').replaceAll('.', '--')}##${queueModel.status}.json';
       File(queueModel.filePath ?? "")
           .renameSync('${directory!.path}/$fileName');
+      
+      //update file path
+      queueModel.filePath = '${directory!.path}/$fileName';
 
       //notify ke controller
       queueController.add(queue);
