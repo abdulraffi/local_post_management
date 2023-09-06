@@ -20,17 +20,17 @@ class PostModel {
   PostModel.fromJson(Map<String, dynamic> json) {
     url = Uri.parse(json['url']);
     try {
-      headers = json['headers'];
+      headers = json['headers'] as Map<String, String>;
     } catch (e) {
       headers = {};
     }
     try {
-      query = json['query'];
+      query = json['query'] as Map<String, String>;
     } catch (e) {
       query = {};
     }
     try {
-      body = json['body'];
+      body = json['body'] as Map<String, dynamic>;
     } catch (e) {
       body = {};
     }
