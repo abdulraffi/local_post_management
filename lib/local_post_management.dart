@@ -22,12 +22,15 @@ class LocalPostManagement {
       StreamController<List<QueueModel>>.broadcast();
   StreamController<QueueStatus> queueStatusController =
       StreamController<QueueStatus>.broadcast();
+  late final bool isSequential;
 
   LocalPostManagement() {
     queueStatusController.add(queueStatus);
   }
 
-  Future<void> initialize() {
+  Future<void> initialize([bool isSequential = true]) {
+    //set sequential
+    this.isSequential = isSequential;
     queueStatusController.add(queueStatus);
     return getApplicationDocumentsDirectory().then((value) {
       //chek apakah directory 'localpostqueue' sudah ada
@@ -193,20 +196,33 @@ class LocalPostManagement {
             }).catchError((onError) {
               postModel.lastError = ErrorHandlingUtil.handleApiError(onError);
               postModel.lastTryDate = DateTime.now();
-              queueModel.status = 'failed';
+
               File(queueModel.filePath ?? "")
                   .writeAsString(jsonEncode(postModel.toJson()));
               //rename file name
-              String fileName =
-                  '${queueModel.id}#${queueModel.name}#${queueModel.createdDate!.toIso8601String().replaceAll(':', '_').replaceAll('.', '--')}##${queueModel.status}.json';
-              File(queueModel.filePath ?? "")
-                  .renameSync('${directory!.path}/$fileName');
-              //update file path
-              queueModel.filePath = '${directory!.path}/$fileName';
-              //notify ke controller
-              queueController.add(queue);
+
+              //jika jenis antrian sequential di nontaifkan maka antrian akan dilanjutkan dan antrian ini di set ke faied
+              if (isSequential == false) {
+                queueModel.status = 'failed';
+                String fileName =
+                    '${queueModel.id}#${queueModel.name}#${queueModel.createdDate!.toIso8601String().replaceAll(':', '_').replaceAll('.', '--')}##${queueModel.status}.json';
+                File(queueModel.filePath ?? "")
+                    .renameSync('${directory!.path}/$fileName');
+                //update file path
+                queueModel.filePath = '${directory!.path}/$fileName';
+                //notify ke controller
+                queueController.add(queue);
+                runQueue();
+              } else {
+                queueModel.status = 'failed';
+                //notify ke controller
+                queueController.add(queue);
+                //tinggu beberapa detik sebagai jedo pengiriman
+                Future.delayed(const Duration(seconds: 2)).then((value) {
+                  runQueue();
+                });
+              }
               //jalankan antrian berikutnya
-              runQueue();
             });
           } catch (e) {
             PostModel postModel = PostModel();
@@ -250,7 +266,7 @@ class LocalPostManagement {
           '${queueModel.id}#${queueModel.name}#${queueModel.createdDate!.toIso8601String().replaceAll(':', '_').replaceAll('.', '--')}##${queueModel.status}.json';
       File(queueModel.filePath ?? "")
           .renameSync('${directory!.path}/$fileName');
-      
+
       //update file path
       queueModel.filePath = '${directory!.path}/$fileName';
 
