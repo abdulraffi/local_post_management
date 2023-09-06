@@ -154,7 +154,9 @@ class LocalPostManagement {
       try {
         queueModel = queue.firstWhere((element) => element.status == 'pending');
       } catch (e) {
-        runQueue();
+        Future.delayed(const Duration(seconds: 2), () {
+          runQueue();
+        });
       }
       //ubah status antrian menjadi running
       queueModel.status = 'running';
