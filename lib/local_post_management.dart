@@ -23,7 +23,6 @@ class LocalPostManagement {
   StreamController<QueueStatus> queueStatusController =
       StreamController<QueueStatus>.broadcast();
   late final bool isSequential;
-  late final String name;
 
   LocalPostManagement() {
     queueStatusController.add(queueStatus);
