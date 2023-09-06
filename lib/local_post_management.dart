@@ -186,22 +186,45 @@ class LocalPostManagement {
               File(queueModel.filePath ?? "").deleteSync();
               //hapus antrian dari list antrian
               queue.remove(queueModel);
+              //notify ke kontroller
+              queueController.add(queue);
               //jalankan antrian berikutnya
               runQueue();
             }).catchError((onError) {
               postModel.lastError = ErrorHandlingUtil.handleApiError(onError);
               postModel.lastTryDate = DateTime.now();
               queueModel.status = 'failed';
-              queueController.add(queue);
               File(queueModel.filePath ?? "")
                   .writeAsString(jsonEncode(postModel.toJson()));
+              //rename file name
+              String fileName =
+                  '${queueModel.id}#${queueModel.name}#${queueModel.createdDate!.toIso8601String().replaceAll(':', '_').replaceAll('.', '--')}##${queueModel.status}.json';
+              File(queueModel.filePath ?? "")
+                  .renameSync('${directory!.path}/$fileName');
+              //update file path
+              queueModel.filePath = '${directory!.path}/$fileName';
+              //notify ke controller
+              queueController.add(queue);
+              //jalankan antrian berikutnya
               runQueue();
             });
           } catch (e) {
-            queueModel.status = "parse_error";
-            debugPrint(value);
+            PostModel postModel = PostModel();
+            postModel.lastError = ErrorHandlingUtil.handleApiError(e);
+            postModel.lastTryDate = DateTime.now();
+            queueModel.status = 'failed';
+            //tulis ke file
+            File(queueModel.filePath ?? "")
+                .writeAsString(jsonEncode(postModel.toJson()));
+            //rename file name
             queueModel.uploadedDate = DateTime.now();
-            //update status antrian
+            String fileName =
+                '${queueModel.id}#${queueModel.name}#${queueModel.createdDate!.toIso8601String().replaceAll(':', '_').replaceAll('.', '--')}##${queueModel.status}.json';
+            File(queueModel.filePath ?? "")
+                .renameSync('${directory!.path}/$fileName');
+            //update file path
+            queueModel.filePath = '${directory!.path}/$fileName';
+            //notify ke controller
             queueController.add(queue);
             runQueue();
           }
@@ -212,6 +235,48 @@ class LocalPostManagement {
 
   static String getNewId() {
     return "${DateTime.now().millisecondsSinceEpoch.toInt()}";
+  }
+
+  void reloadQueue(String id) {
+    try {
+      //temukan id antrian
+      QueueModel queueModel = queue.firstWhere((element) => element.id == id);
+
+      //set status kembali ke pending
+      queueModel.status = 'pending';
+
+      //rename file name
+      String fileName =
+          '${queueModel.id}#${queueModel.name}#${queueModel.createdDate!.toIso8601String().replaceAll(':', '_').replaceAll('.', '--')}##${queueModel.status}.json';
+      File(queueModel.filePath ?? "")
+          .renameSync('${directory!.path}/$fileName');
+
+      //delete data yang ditemukan dari antrian
+      queue.remove(queueModel);
+
+      //notify ke controller
+      queueController.add(queue);
+    } catch (e) {
+      //
+    }
+  }
+
+  void deleteQueue(String id) {
+    try {
+      //temukan id pada antrian
+      QueueModel queueModel = queue.firstWhere((element) => element.id == id);
+
+      //delete file
+      File(queueModel.filePath ?? "").deleteSync();
+
+      //delete data yang ditemukan dari antrian
+      queue.remove(queueModel);
+
+      //notify ke controller
+      queueController.add(queue);
+    } catch (e) {
+      //
+    }
   }
 }
 
