@@ -219,6 +219,10 @@ class LocalPostManagement {
                 queueController.add(queue);
                 //tinggu beberapa detik sebagai jedo pengiriman
                 Future.delayed(const Duration(seconds: 2)).then((value) {
+                  //kembalikan jadi pending
+                  queueModel.status = 'pending';
+                  //notify ke controller
+                  queueController.add(queue);
                   runQueue();
                 });
               }
