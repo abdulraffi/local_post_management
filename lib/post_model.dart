@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 class PostModel {
   Uri? url;
   Map<String, String> headers = {};
@@ -43,9 +41,9 @@ class PostModel {
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['url'] = url.toString();
-    data['headers'] = json.encode(headers);
-    data['query'] = json.encode(query);
-    data['body'] = json.encode(body);
+    data['headers'] = headers;
+    data['query'] = query;
+    data['body'] = body;
     data['lastTryDate'] = lastTryDate?.toIso8601String();
     data['lastError'] = lastError;
     return data;
