@@ -166,6 +166,8 @@ class LocalPostManagement {
         (value) {
           //upload post data model
           try {
+            queueModel.status = 'sending';
+            queueController.add(queue);
             PostModel postModel = PostModel.fromJson(json.decode(value));
             Network.post(
               url: postModel.url!,
@@ -187,6 +189,11 @@ class LocalPostManagement {
             }).catchError((onError) {
               postModel.lastError = ErrorHandlingUtil.handleApiError(onError);
               postModel.lastTryDate = DateTime.now();
+              queueModel.status = 'failed';
+              queueController.add(queue);
+              File(queueModel.filePath ?? "")
+                  .writeAsString(jsonEncode(postModel.toJson()));
+              runQueue();
             });
           } catch (e) {
             queueModel.status = "parse_error";
