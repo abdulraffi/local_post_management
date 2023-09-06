@@ -31,4 +31,11 @@ class QueueModel {
       throw onError;
     });
   }
+
+  PostModel get readData{
+    //baca file dari file path
+    String data = File(filePath!).readAsStringSync();
+    //convert ke PostModel
+    return PostModel.fromJson(jsonDecode(data));
+  }
 }
