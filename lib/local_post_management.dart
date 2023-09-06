@@ -149,9 +149,13 @@ class LocalPostManagement {
   //run queue, mulai menjalankan antrian
   void runQueue() {
     if (queueStatus == QueueStatus.running) {
+      QueueModel queueModel = QueueModel();
       //ambil antrian pertama
-      QueueModel queueModel =
-          queue.firstWhere((element) => element.status == 'pending');
+      try {
+        queueModel = queue.firstWhere((element) => element.status == 'pending');
+      } catch (e) {
+        runQueue();
+      }
       //ubah status antrian menjadi running
       queueModel.status = 'running';
       //update status antrian
