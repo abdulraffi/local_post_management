@@ -22,6 +22,9 @@ class LocalPostManagement {
       StreamController<List<QueueModel>>.broadcast();
   StreamController<QueueStatus> queueStatusController =
       StreamController<QueueStatus>.broadcast();
+  ValueChanged<QueueStatus> onSendingSuccess = (QueueStatus status) {};
+  ValueChanged<QueueStatus> onSendingError = (QueueStatus status) {};
+  ValueChanged<QueueStatus> onError = (QueueStatus status) {};
   late final bool isSequential;
 
   LocalPostManagement() {
@@ -193,6 +196,9 @@ class LocalPostManagement {
               //notify ke kontroller
               queueController.add(queue);
               //jalankan antrian berikutnya
+              //send callback
+              onSendingSuccess(queueStatus);
+              //end callback
               runQueue();
             }).catchError((onError) {
               postModel.lastError = ErrorHandlingUtil.handleApiError(onError);
@@ -213,6 +219,9 @@ class LocalPostManagement {
                 queueModel.filePath = '${directory!.path}/$fileName';
                 //notify ke controller
                 queueController.add(queue);
+                //send callback
+                onError(queueStatus);
+                //end callback
                 runQueue();
               } else {
                 queueModel.status = 'failed';
@@ -247,6 +256,9 @@ class LocalPostManagement {
             queueModel.filePath = '${directory!.path}/$fileName';
             //notify ke controller
             queueController.add(queue);
+            //send callback
+            onError(queueStatus);
+            //end callback
             runQueue();
           }
         },
