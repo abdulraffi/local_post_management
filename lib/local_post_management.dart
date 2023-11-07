@@ -25,7 +25,8 @@ class LocalPostManagement {
   ValueChanged<QueueStatus> onSendingSuccess = (QueueStatus status) {};
   ValueChanged<QueueStatus> onSendingError = (QueueStatus status) {};
   ValueChanged<QueueStatus> onError = (QueueStatus status) {};
-  late final bool isSequential;
+  bool? isSequential;
+  String? name;
 
   LocalPostManagement() {
     queueStatusController.add(queueStatus);
@@ -38,12 +39,28 @@ class LocalPostManagement {
     queueStatusController.add(queueStatus);
     return getApplicationDocumentsDirectory().then((value) {
       //chek apakah directory 'localpostqueue' sudah ada
+      this.name = name;
       directory = Directory('${value.path}/$name');
       if (!directory!.existsSync()) {
         //jika belum ada, buat directory 'antrian'
         directory!.createSync();
       }
     });
+  }
+
+  Future<void> reiInitialize() {
+    //set sequential
+    queueStatusController.add(queueStatus);
+    return getApplicationDocumentsDirectory().then(
+      (value) {
+        //chek apakah directory 'localpostqueue' sudah ada
+        directory = Directory('${value.path}/${this.name}');
+        if (!directory!.existsSync()) {
+          //jika belum ada, buat directory 'antrian'
+          directory!.createSync();
+        }
+      },
+    );
   }
 
   Future<List<QueueModel>> getQueue() {
@@ -122,6 +139,11 @@ class LocalPostManagement {
       queue = value;
       queueController.add(queue);
     });
+  }
+
+  //get queue and add to queue
+  void reLoadQueue() {
+    queueController.add(queue);
   }
 
   //add and load queue
