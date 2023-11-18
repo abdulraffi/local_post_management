@@ -27,14 +27,18 @@ class LocalPostManagement {
   ValueChanged<QueueStatus> onError = (QueueStatus status) {};
   bool? isSequential;
   String? name;
+  bool? removeData;
 
   LocalPostManagement() {
     queueStatusController.add(queueStatus);
   }
 
   Future<void> initialize(
-      [bool isSequential = true, String name = 'localpostqueue']) {
+      [bool isSequential = true,
+      String name = 'localpostqueue',
+      bool removeData = false]) {
     //set sequential
+    this.removeData = removeData;
     this.isSequential = isSequential;
     queueStatusController.add(queueStatus);
     return getApplicationDocumentsDirectory().then((value) {
@@ -211,13 +215,15 @@ class LocalPostManagement {
               queueModel.uploadedDate = DateTime.now();
               //update status antrian
               queueController.add(queue);
-              //hapus file antrian
-              File(queueModel.filePath ?? "").deleteSync();
-              //hapus antrian dari list antrian
-              queue.remove(queueModel);
-              //notify ke kontroller
-              queueController.add(queue);
-              //jalankan antrian berikutnya
+              if (removeData == true) {
+                //hapus file antrian
+                File(queueModel.filePath ?? "").deleteSync();
+                //hapus antrian dari list antrian
+                queue.remove(queueModel);
+                //notify ke kontroller
+                queueController.add(queue);
+                //jalankan antrian berikutnya
+              }
               //send callback
               onSendingSuccess(queueStatus);
               //end callback
