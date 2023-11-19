@@ -36,7 +36,7 @@ class LocalPostManagement {
   Future<void> initialize(
       [bool isSequential = true,
       String name = 'localpostqueue',
-      bool removeData = false]) {
+      bool removeData = true]) {
     //set sequential
     this.removeData = removeData;
     this.isSequential = isSequential;
