@@ -220,10 +220,10 @@ class LocalPostManagement {
                 File(queueModel.filePath ?? "").deleteSync();
                 //hapus antrian dari list antrian
                 queue.remove(queueModel);
-                //notify ke kontroller
-                queueController.add(queue);
-                //jalankan antrian berikutnya
               }
+              //notify ke kontroller
+              queueController.add(queue);
+              //jalankan antrian berikutnya
               //send callback
               onSendingSuccess(queueStatus);
               //end callback
