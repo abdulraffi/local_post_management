@@ -28,19 +28,22 @@ class LocalPostManagement {
   bool? isSequential;
   String? name;
   bool? removeData;
-  Map<String, String> replaceHeader = {};
+  Map<String, dynamic> Function()? replaceHeader;
 
   LocalPostManagement() {
     queueStatusController.add(queueStatus);
   }
 
   Future<void> initialize(
-      [bool isSequential = true,
-      String name = 'localpostqueue',
-      bool removeData = true]) {
+    bool isSequential,
+    String name, {
+    bool? removeData = true,
+    Map<String, dynamic> Function()? replaceHeader,
+  }) {
     //set sequential
     this.removeData = removeData;
     this.isSequential = isSequential;
+    this.replaceHeader = replaceHeader;
     queueStatusController.add(queueStatus);
     return getApplicationDocumentsDirectory().then((value) {
       //chek apakah directory 'localpostqueue' sudah ada
@@ -59,7 +62,7 @@ class LocalPostManagement {
     return getApplicationDocumentsDirectory().then(
       (value) {
         //chek apakah directory 'localpostqueue' sudah ada
-        directory = Directory('${value.path}/${this.name}');
+        directory = Directory('${value.path}/$name');
         if (!directory!.existsSync()) {
           //jika belum ada, buat directory 'antrian'
           directory!.createSync();
@@ -206,10 +209,13 @@ class LocalPostManagement {
             queueController.add(queue);
             PostModel postModel = PostModel.fromJson(json.decode(value));
 
+            //check aapakah reolace header tidak null
+            var replacementHeader = replaceHeader?.call() ?? {};
+
             //replace header
-            if (replaceHeader.isNotEmpty) {
+            if (replacementHeader.isNotEmpty) {
               //lopp header replacement
-              replaceHeader.forEach((key, value) {
+              replacementHeader.forEach((key, value) {
                 //replace header
                 postModel.headers[key] = value;
               });
