@@ -194,6 +194,7 @@ class LocalPostManagement {
         Future.delayed(const Duration(seconds: 2), () {
           runQueue();
         });
+        return;
       }
       //ubah status antrian menjadi running
       queueModel.status = 'running';
