@@ -28,6 +28,7 @@ class LocalPostManagement {
   bool? isSequential;
   String? name;
   bool? removeData;
+  Map<String, String> replaceHeader = {};
 
   LocalPostManagement() {
     queueStatusController.add(queueStatus);
@@ -204,6 +205,16 @@ class LocalPostManagement {
             queueModel.status = 'sending';
             queueController.add(queue);
             PostModel postModel = PostModel.fromJson(json.decode(value));
+
+            //replace header
+            if (replaceHeader.isNotEmpty) {
+              //lopp header replacement
+              replaceHeader.forEach((key, value) {
+                //replace header
+                postModel.headers[key] = value;
+              });
+            }
+
             Network.post(
               url: postModel.url!,
               body: postModel.body,
