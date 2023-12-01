@@ -71,6 +71,28 @@ class LocalPostManagement {
     );
   }
 
+  Future<void> reset() {
+    queueStatus = QueueStatus.idle;
+    queueStatusController.add(queueStatus);
+    queue = [];
+    queueController.add(queue);
+    return getApplicationDocumentsDirectory().then(
+      (value) {
+        //chek apakah directory 'localpostqueue' sudah ada
+        directory = Directory('${value.path}/$name');
+        if (!directory!.existsSync()) {
+          //jika belum ada, buat directory 'antrian'
+          directory!.createSync();
+        } else {
+          directory!.listSync().forEach((element) {
+            element.deleteSync();
+          });
+          directory!.createSync();
+        }
+      },
+    );
+  }
+
   Future<List<QueueModel>> getQueue() {
     //format penamaan file [id]#[name]#[createdDate]#[uploadedDate]#[status].json
     List<QueueModel> queue = [];
