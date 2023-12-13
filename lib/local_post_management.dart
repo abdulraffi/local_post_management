@@ -285,10 +285,10 @@ class LocalPostManagement {
               onSendingSuccess(queueStatus);
               //end callback
               runQueue();
-            }).catchError((onError) {
-              postModel.statusCode = readStatusCode(onError);
+            }).catchError((error) {
+              postModel.statusCode = readStatusCode(error);
               debugPrint("statuscode error ${postModel.statusCode}");
-              postModel.lastError = ErrorHandlingUtil.handleApiError(onError);
+              postModel.lastError = ErrorHandlingUtil.handleApiError(error);
               postModel.lastTryDate = DateTime.now();
 
               File(queueModel.filePath ?? "")
