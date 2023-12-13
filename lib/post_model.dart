@@ -14,6 +14,7 @@ class PostModel {
     this.body = const {},
     this.lastTryDate,
     this.lastError,
+    this.statusCode,
   });
 
   PostModel.fromJson(Map<String, dynamic> json) {
@@ -37,6 +38,7 @@ class PostModel {
         ? null
         : DateTime.parse(json['lastTryDate']);
     lastError = json['lastError'];
+    statusCode = json['statusCode'];
   }
 
   Map<String, dynamic> toJson() {
@@ -47,6 +49,7 @@ class PostModel {
     data['body'] = body;
     data['lastTryDate'] = lastTryDate?.toIso8601String();
     data['lastError'] = lastError;
+    data['statusCode'] = statusCode;
     return data;
   }
 }

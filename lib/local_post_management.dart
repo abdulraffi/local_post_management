@@ -287,6 +287,7 @@ class LocalPostManagement {
               runQueue();
             }).catchError((onError) {
               postModel.statusCode = readStatusCode(onError);
+              debugPrint("statuscode error ${postModel.statusCode}");
               postModel.lastError = ErrorHandlingUtil.handleApiError(onError);
               postModel.lastTryDate = DateTime.now();
 
