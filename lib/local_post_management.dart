@@ -12,6 +12,7 @@ import 'package:local_post_management/post_model.dart';
 import 'package:local_post_management/queue_model.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'package:http/http.dart' as http;
 
 /// A Calculator.
 class LocalPostManagement {
@@ -29,6 +30,7 @@ class LocalPostManagement {
   String? name;
   bool? removeData;
   Map<String, dynamic> Function()? replaceHeader;
+  List<int> skipSquential = [403];
 
   LocalPostManagement() {
     queueStatusController.add(queueStatus);
@@ -279,6 +281,7 @@ class LocalPostManagement {
               //end callback
               runQueue();
             }).catchError((onError) {
+              postModel.statusCode = readStatusCode(onError);
               postModel.lastError = ErrorHandlingUtil.handleApiError(onError);
               postModel.lastTryDate = DateTime.now();
 
@@ -287,7 +290,8 @@ class LocalPostManagement {
               //rename file name
 
               //jika jenis antrian sequential di nontaifkan maka antrian akan dilanjutkan dan antrian ini di set ke faied
-              if (isSequential == false) {
+              if (isSequential == false ||
+                  skipSquential.contains(postModel.statusCode)) {
                 queueModel.status = 'failed';
                 String fileName =
                     '${queueModel.id}#${queueModel.name}#${queueModel.createdDate!.toIso8601String().replaceAll(':', '_').replaceAll('.', '--')}##${queueModel.status}.json';
@@ -318,6 +322,7 @@ class LocalPostManagement {
             });
           } catch (e) {
             PostModel postModel = PostModel();
+            postModel.statusCode = 900;
             postModel.lastError = ErrorHandlingUtil.handleApiError(e);
             postModel.lastTryDate = DateTime.now();
             queueModel.status = 'failed';
@@ -342,6 +347,16 @@ class LocalPostManagement {
         },
       );
     }
+  }
+
+  static readStatusCode(dynamic error) {
+    if (error is http.Response) {
+      return error.statusCode;
+    }
+    if (error is SocketException) {
+      return 601;
+    }
+    return 900;
   }
 
   static String getNewId() {

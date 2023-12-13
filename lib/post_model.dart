@@ -5,6 +5,7 @@ class PostModel {
   Map<String, dynamic> body = {};
   DateTime? lastTryDate;
   String? lastError;
+  int? statusCode;
 
   PostModel({
     this.url,
