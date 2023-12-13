@@ -30,7 +30,8 @@ class LocalPostManagement {
   String? name;
   bool? removeData;
   Map<String, dynamic> Function()? replaceHeader;
-  List<int> skipSquential = [403];
+  Duration delayed = const Duration(seconds: 2);
+  List<int> skipSquential = [];
 
   LocalPostManagement() {
     queueStatusController.add(queueStatus);
@@ -41,11 +42,15 @@ class LocalPostManagement {
     String name, {
     bool? removeData = true,
     Map<String, dynamic> Function()? replaceHeader,
+    List<int> skipSquential = const [],
+    Duration delayed = const Duration(seconds: 2),
   }) {
     //set sequential
     this.removeData = removeData;
     this.isSequential = isSequential;
     this.replaceHeader = replaceHeader;
+    this.skipSquential = skipSquential;
+    this.delayed = delayed;
     queueStatusController.add(queueStatus);
     return getApplicationDocumentsDirectory().then((value) {
       //chek apakah directory 'localpostqueue' sudah ada
@@ -215,7 +220,7 @@ class LocalPostManagement {
       try {
         queueModel = queue.firstWhere((element) => element.status == 'pending');
       } catch (e) {
-        Future.delayed(const Duration(seconds: 2), () {
+        Future.delayed(delayed, () {
           runQueue();
         });
         return;
@@ -310,7 +315,7 @@ class LocalPostManagement {
                 //notify ke controller
                 queueController.add(queue);
                 //tinggu beberapa detik sebagai jedo pengiriman
-                Future.delayed(const Duration(seconds: 2)).then((value) {
+                Future.delayed(delayed).then((value) {
                   //kembalikan jadi pending
                   queueModel.status = 'pending';
                   //notify ke controller
