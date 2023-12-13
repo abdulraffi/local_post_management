@@ -215,143 +215,148 @@ class LocalPostManagement {
   //run queue, mulai menjalankan antrian
   void runQueue() {
     if (queueStatus == QueueStatus.running) {
-      QueueModel queueModel = QueueModel();
-      //ambil antrian pertama
       try {
-        queueModel = queue.firstWhere((element) => element.status == 'pending');
-      } catch (e) {
-        Future.delayed(delayed, () {
-          runQueue();
-        });
-        return;
-      }
-      //ubah status antrian menjadi running
-      queueModel.status = 'running';
-      //update status antrian
-      queueController.add(queue);
-      //jalankan antrian
-      //read post data model from file
-      File(queueModel.filePath ?? "").readAsString().then(
-        (value) {
-          //upload post data model
-          try {
-            queueModel.status = 'sending';
-            queueController.add(queue);
-            PostModel postModel = PostModel.fromJson(json.decode(value));
-
-            //check aapakah reolace header tidak null
-            var replacementHeader = replaceHeader?.call() ?? {};
-
-            //replace header
-            if (replacementHeader.isNotEmpty) {
-              //lopp header replacement
-              replacementHeader.forEach((key, value) {
-                //replace header
-                postModel.headers[key] = value;
-              });
-            }
-
-            Network.post(
-              url: postModel.url!,
-              body: postModel.body,
-              headers: postModel.headers,
-              querys: postModel.query,
-            ).then((value) {
-              //update sttus antrian menjadi success
-              queueModel.status = 'success';
-              queueModel.uploadedDate = DateTime.now();
-              //update status antrian
+        QueueModel queueModel = QueueModel();
+        //ambil antrian pertama
+        try {
+          queueModel =
+              queue.firstWhere((element) => element.status == 'pending');
+        } catch (e) {
+          Future.delayed(delayed, () {
+            runQueue();
+          });
+          return;
+        }
+        //ubah status antrian menjadi running
+        queueModel.status = 'running';
+        //update status antrian
+        queueController.add(queue);
+        //jalankan antrian
+        //read post data model from file
+        File(queueModel.filePath ?? "").readAsString().then(
+          (value) {
+            //upload post data model
+            try {
+              queueModel.status = 'sending';
               queueController.add(queue);
-              if (removeData == true) {
-                //hapus file antrian
-                File(queueModel.filePath ?? "").deleteSync();
-                //hapus antrian dari list antrian
-                queue.remove(queueModel);
-              } else {
-                //rename file name
-                queueModel.uploadedDate = DateTime.now();
-                String fileName =
-                    '${queueModel.id}#${queueModel.name}#${queueModel.createdDate!.toIso8601String().replaceAll(':', '_').replaceAll('.', '--')}##${queueModel.status}.json';
-                File(queueModel.filePath ?? "")
-                    .renameSync('${directory!.path}/$fileName');
-                //update file path
-                queueModel.filePath = '${directory!.path}/$fileName';
-                //notify ke controller
+              PostModel postModel = PostModel.fromJson(json.decode(value));
+
+              //check aapakah reolace header tidak null
+              var replacementHeader = replaceHeader?.call() ?? {};
+
+              //replace header
+              if (replacementHeader.isNotEmpty) {
+                //lopp header replacement
+                replacementHeader.forEach((key, value) {
+                  //replace header
+                  postModel.headers[key] = value;
+                });
               }
-              //notify ke kontroller
-              queueController.add(queue);
-              //jalankan antrian berikutnya
-              //send callback
-              onSendingSuccess(queueStatus);
-              //end callback
-              runQueue();
-            }).catchError((onError) {
-              postModel.statusCode = readStatusCode(onError);
-              debugPrint("statuscode error ${postModel.statusCode}");
-              postModel.lastError = ErrorHandlingUtil.handleApiError(onError);
-              postModel.lastTryDate = DateTime.now();
 
+              Network.post(
+                url: postModel.url!,
+                body: postModel.body,
+                headers: postModel.headers,
+                querys: postModel.query,
+              ).then((value) {
+                //update sttus antrian menjadi success
+                queueModel.status = 'success';
+                queueModel.uploadedDate = DateTime.now();
+                //update status antrian
+                queueController.add(queue);
+                if (removeData == true) {
+                  //hapus file antrian
+                  File(queueModel.filePath ?? "").deleteSync();
+                  //hapus antrian dari list antrian
+                  queue.remove(queueModel);
+                } else {
+                  //rename file name
+                  queueModel.uploadedDate = DateTime.now();
+                  String fileName =
+                      '${queueModel.id}#${queueModel.name}#${queueModel.createdDate!.toIso8601String().replaceAll(':', '_').replaceAll('.', '--')}##${queueModel.status}.json';
+                  File(queueModel.filePath ?? "")
+                      .renameSync('${directory!.path}/$fileName');
+                  //update file path
+                  queueModel.filePath = '${directory!.path}/$fileName';
+                  //notify ke controller
+                }
+                //notify ke kontroller
+                queueController.add(queue);
+                //jalankan antrian berikutnya
+                //send callback
+                onSendingSuccess(queueStatus);
+                //end callback
+                runQueue();
+              }).catchError((onError) {
+                postModel.statusCode = readStatusCode(onError);
+                debugPrint("statuscode error ${postModel.statusCode}");
+                postModel.lastError = ErrorHandlingUtil.handleApiError(onError);
+                postModel.lastTryDate = DateTime.now();
+
+                File(queueModel.filePath ?? "")
+                    .writeAsString(jsonEncode(postModel.toJson()));
+                //rename file name
+
+                //jika jenis antrian sequential di nontaifkan maka antrian akan dilanjutkan dan antrian ini di set ke faied
+                if (isSequential == false ||
+                    skipSquential.contains(postModel.statusCode)) {
+                  queueModel.status = 'failed';
+                  String fileName =
+                      '${queueModel.id}#${queueModel.name}#${queueModel.createdDate!.toIso8601String().replaceAll(':', '_').replaceAll('.', '--')}##${queueModel.status}.json';
+                  File(queueModel.filePath ?? "")
+                      .renameSync('${directory!.path}/$fileName');
+                  //update file path
+                  queueModel.filePath = '${directory!.path}/$fileName';
+                  //notify ke controller
+                  queueController.add(queue);
+                  //send callback
+                  onError(queueStatus);
+                  //end callback
+                  runQueue();
+                } else {
+                  queueModel.status = 'failed';
+                  //notify ke controller
+                  queueController.add(queue);
+                  //tinggu beberapa detik sebagai jedo pengiriman
+                  Future.delayed(delayed).then((value) {
+                    //kembalikan jadi pending
+                    queueModel.status = 'pending';
+                    //notify ke controller
+                    queueController.add(queue);
+                    runQueue();
+                  });
+                }
+                //jalankan antrian berikutnya
+              });
+            } catch (e) {
+              PostModel postModel = PostModel();
+              postModel.statusCode = 900;
+              postModel.lastError = ErrorHandlingUtil.handleApiError(e);
+              postModel.lastTryDate = DateTime.now();
+              queueModel.status = 'failed';
+              //tulis ke file
               File(queueModel.filePath ?? "")
                   .writeAsString(jsonEncode(postModel.toJson()));
               //rename file name
-
-              //jika jenis antrian sequential di nontaifkan maka antrian akan dilanjutkan dan antrian ini di set ke faied
-              if (isSequential == false ||
-                  skipSquential.contains(postModel.statusCode)) {
-                queueModel.status = 'failed';
-                String fileName =
-                    '${queueModel.id}#${queueModel.name}#${queueModel.createdDate!.toIso8601String().replaceAll(':', '_').replaceAll('.', '--')}##${queueModel.status}.json';
-                File(queueModel.filePath ?? "")
-                    .renameSync('${directory!.path}/$fileName');
-                //update file path
-                queueModel.filePath = '${directory!.path}/$fileName';
-                //notify ke controller
-                queueController.add(queue);
-                //send callback
-                onError(queueStatus);
-                //end callback
-                runQueue();
-              } else {
-                queueModel.status = 'failed';
-                //notify ke controller
-                queueController.add(queue);
-                //tinggu beberapa detik sebagai jedo pengiriman
-                Future.delayed(delayed).then((value) {
-                  //kembalikan jadi pending
-                  queueModel.status = 'pending';
-                  //notify ke controller
-                  queueController.add(queue);
-                  runQueue();
-                });
-              }
-              //jalankan antrian berikutnya
-            });
-          } catch (e) {
-            PostModel postModel = PostModel();
-            postModel.statusCode = 900;
-            postModel.lastError = ErrorHandlingUtil.handleApiError(e);
-            postModel.lastTryDate = DateTime.now();
-            queueModel.status = 'failed';
-            //tulis ke file
-            File(queueModel.filePath ?? "")
-                .writeAsString(jsonEncode(postModel.toJson()));
-            //rename file name
-            queueModel.uploadedDate = DateTime.now();
-            String fileName =
-                '${queueModel.id}#${queueModel.name}#${queueModel.createdDate!.toIso8601String().replaceAll(':', '_').replaceAll('.', '--')}##${queueModel.status}.json';
-            File(queueModel.filePath ?? "")
-                .renameSync('${directory!.path}/$fileName');
-            //update file path
-            queueModel.filePath = '${directory!.path}/$fileName';
-            //notify ke controller
-            queueController.add(queue);
-            //send callback
-            onError(queueStatus);
-            //end callback
-            runQueue();
-          }
-        },
-      );
+              queueModel.uploadedDate = DateTime.now();
+              String fileName =
+                  '${queueModel.id}#${queueModel.name}#${queueModel.createdDate!.toIso8601String().replaceAll(':', '_').replaceAll('.', '--')}##${queueModel.status}.json';
+              File(queueModel.filePath ?? "")
+                  .renameSync('${directory!.path}/$fileName');
+              //update file path
+              queueModel.filePath = '${directory!.path}/$fileName';
+              //notify ke controller
+              queueController.add(queue);
+              //send callback
+              onError(queueStatus);
+              //end callback
+              runQueue();
+            }
+          },
+        );
+      } catch (e) {
+        runQueue();
+      }
     }
   }
 
