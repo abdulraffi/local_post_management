@@ -261,8 +261,6 @@ class LocalPostManagement {
               headers: postModel.headers,
               querys: postModel.query,
             ).then((value) {
-              //update response
-              postModel.response = value;
               //update sttus antrian menjadi success
               queueModel.status = 'success';
               queueModel.uploadedDate = DateTime.now();
@@ -274,9 +272,6 @@ class LocalPostManagement {
                 //hapus antrian dari list antrian
                 queue.remove(queueModel);
               } else {
-                //tulis ke file
-                File(queueModel.filePath ?? "")
-                    .writeAsString(jsonEncode(postModel.toJson()));
                 //rename file name
                 queueModel.uploadedDate = DateTime.now();
                 String fileName =
@@ -295,7 +290,6 @@ class LocalPostManagement {
               //end callback
               runQueue();
             }).catchError((error) {
-              postModel.response = error;
               postModel.statusCode = readStatusCode(error);
               debugPrint("statuscode error ${postModel.statusCode}");
               postModel.lastError = ErrorHandlingUtil.handleApiError(error);
@@ -309,10 +303,6 @@ class LocalPostManagement {
               if (isSequential == false ||
                   skipSquential.contains(postModel.statusCode)) {
                 queueModel.status = 'failed';
-                //tulis ke file
-                File(queueModel.filePath ?? "")
-                    .writeAsString(jsonEncode(postModel.toJson()));
-                //siaapkan untuk rename file
                 String fileName =
                     '${queueModel.id}#${queueModel.name}#${queueModel.createdDate!.toIso8601String().replaceAll(':', '_').replaceAll('.', '--')}##${queueModel.status}.json';
                 File(queueModel.filePath ?? "")
