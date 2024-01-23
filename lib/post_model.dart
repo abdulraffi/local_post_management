@@ -1,11 +1,9 @@
-import 'package:http/http.dart' as http;
-
 class PostModel {
   Uri? url;
   Map<String, String> headers = {};
   Map<String, String> query = {};
   Map<String, dynamic> body = {};
-  http.Response? response;
+  dynamic response = {};
   DateTime? lastTryDate;
   String? lastError;
   int? statusCode;
@@ -15,7 +13,7 @@ class PostModel {
     this.headers = const {},
     this.query = const {},
     this.body = const {},
-    this.response,
+    this.response = const {},
     this.lastTryDate,
     this.lastError,
     this.statusCode,
@@ -41,7 +39,7 @@ class PostModel {
     try {
       response = json['response'];
     } catch (e) {
-      response = null;
+      response = {};
     }
     lastTryDate = json['lastTryDate'] == null
         ? null
