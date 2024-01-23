@@ -265,6 +265,9 @@ class LocalPostManagement {
               queueModel.status = 'success';
               postModel.response = json.decode(json.encode(value));
               queueModel.uploadedDate = DateTime.now();
+              //tulis ke file
+              File(queueModel.filePath ?? "")
+                  .writeAsString(jsonEncode(postModel.toJson()));
               //update status antrian
               queueController.add(queue);
               if (removeData == true) {
