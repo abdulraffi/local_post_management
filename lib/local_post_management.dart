@@ -263,6 +263,7 @@ class LocalPostManagement {
             ).then((value) {
               //update sttus antrian menjadi success
               queueModel.status = 'success';
+              postModel.response = value;
               queueModel.uploadedDate = DateTime.now();
               //update status antrian
               queueController.add(queue);
