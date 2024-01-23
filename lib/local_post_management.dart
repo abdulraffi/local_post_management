@@ -241,7 +241,8 @@ class LocalPostManagement {
           try {
             queueModel.status = 'sending';
             queueController.add(queue);
-            PostModel postModel = PostModel.fromJson(json.decode(value));
+            //read data and will store to PostModel field
+            queueModel.readData;
 
             //check aapakah reolace header tidak null
             var replacementHeader = replaceHeader?.call() ?? {};
@@ -251,23 +252,22 @@ class LocalPostManagement {
               //lopp header replacement
               replacementHeader.forEach((key, value) {
                 //replace header
-                postModel.headers[key] = value;
+                queueModel.postModel?.headers[key] = value;
               });
             }
 
             Network.post(
-              url: postModel.url!,
-              body: postModel.body,
-              headers: postModel.headers,
-              querys: postModel.query,
+              url: queueModel.postModel!.url!,
+              body: queueModel.postModel!.body,
+              headers: queueModel.postModel!.headers,
+              querys: queueModel.postModel!.query,
             ).then((value) {
               //update sttus antrian menjadi success
               queueModel.status = 'success';
-              postModel.response = json.encode(value);
+              queueModel.postModel!.response = json.encode(value);
               queueModel.uploadedDate = DateTime.now();
               //tulis ke file
-              File(queueModel.filePath ?? "")
-                  .writeAsString(jsonEncode(postModel.toJson()));
+              queueModel.save();
               //update status antrian
               queueController.add(queue);
               if (removeData == true) {
@@ -278,12 +278,7 @@ class LocalPostManagement {
               } else {
                 //rename file name
                 queueModel.uploadedDate = DateTime.now();
-                String fileName =
-                    '${queueModel.id}#${queueModel.name}#${queueModel.createdDate!.toIso8601String().replaceAll(':', '_').replaceAll('.', '--')}##${queueModel.status}.json';
-                File(queueModel.filePath ?? "")
-                    .renameSync('${directory!.path}/$fileName');
-                //update file path
-                queueModel.filePath = '${directory!.path}/$fileName';
+                queueModel.updateFileName(directory);
                 //notify ke controller
               }
               //notify ke kontroller
@@ -294,25 +289,21 @@ class LocalPostManagement {
               //end callback
               runQueue();
             }).catchError((error) {
-              postModel.statusCode = readStatusCode(error);
-              debugPrint("statuscode error ${postModel.statusCode}");
-              postModel.lastError = ErrorHandlingUtil.handleApiError(error);
-              postModel.lastTryDate = DateTime.now();
+              queueModel.postModel!.statusCode = readStatusCode(error);
+              debugPrint(
+                  "statuscode error ${queueModel.postModel!.statusCode}");
+              queueModel.postModel!.lastError =
+                  ErrorHandlingUtil.handleApiError(error);
+              queueModel.postModel!.lastTryDate = DateTime.now();
 
-              File(queueModel.filePath ?? "")
-                  .writeAsString(jsonEncode(postModel.toJson()));
+              queueModel.save();
               //rename file name
 
               //jika jenis antrian sequential di nontaifkan maka antrian akan dilanjutkan dan antrian ini di set ke faied
               if (isSequential == false ||
-                  skipSquential.contains(postModel.statusCode)) {
+                  skipSquential.contains(queueModel.postModel!.statusCode)) {
                 queueModel.status = 'failed';
-                String fileName =
-                    '${queueModel.id}#${queueModel.name}#${queueModel.createdDate!.toIso8601String().replaceAll(':', '_').replaceAll('.', '--')}##${queueModel.status}.json';
-                File(queueModel.filePath ?? "")
-                    .renameSync('${directory!.path}/$fileName');
-                //update file path
-                queueModel.filePath = '${directory!.path}/$fileName';
+                queueModel.updateFileName(directory);
                 //notify ke controller
                 queueController.add(queue);
                 //send callback
@@ -341,16 +332,11 @@ class LocalPostManagement {
             postModel.lastTryDate = DateTime.now();
             queueModel.status = 'failed';
             //tulis ke file
-            File(queueModel.filePath ?? "")
-                .writeAsString(jsonEncode(postModel.toJson()));
+            queueModel.save();
             //rename file name
             queueModel.uploadedDate = DateTime.now();
-            String fileName =
-                '${queueModel.id}#${queueModel.name}#${queueModel.createdDate!.toIso8601String().replaceAll(':', '_').replaceAll('.', '--')}##${queueModel.status}.json';
-            File(queueModel.filePath ?? "")
-                .renameSync('${directory!.path}/$fileName');
+            queueModel.updateFileName(directory);
             //update file path
-            queueModel.filePath = '${directory!.path}/$fileName';
             //notify ke controller
             queueController.add(queue);
             //send callback
