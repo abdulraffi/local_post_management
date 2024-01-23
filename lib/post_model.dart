@@ -3,6 +3,7 @@ class PostModel {
   Map<String, String> headers = {};
   Map<String, String> query = {};
   Map<String, dynamic> body = {};
+  dynamic response = {};
   DateTime? lastTryDate;
   String? lastError;
   int? statusCode;
@@ -12,6 +13,7 @@ class PostModel {
     this.headers = const {},
     this.query = const {},
     this.body = const {},
+    this.response = const {},
     this.lastTryDate,
     this.lastError,
     this.statusCode,
@@ -34,6 +36,11 @@ class PostModel {
     } catch (e) {
       body = {};
     }
+    try {
+      response = json['response'];
+    } catch (e) {
+      response = {};
+    }
     lastTryDate = json['lastTryDate'] == null
         ? null
         : DateTime.parse(json['lastTryDate']);
@@ -47,6 +54,7 @@ class PostModel {
     data['headers'] = headers;
     data['query'] = query;
     data['body'] = body;
+    data['response'] = response;
     data['lastTryDate'] = lastTryDate?.toIso8601String();
     data['lastError'] = lastError;
     data['statusCode'] = statusCode;
