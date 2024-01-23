@@ -23,6 +23,7 @@ class LocalPostManagement {
       StreamController<List<QueueModel>>.broadcast();
   StreamController<QueueStatus> queueStatusController =
       StreamController<QueueStatus>.broadcast();
+  ValueChanged<QueueModel>? onSendding;
   ValueChanged<QueueModel>? onSendingSuccess;
   ValueChanged<QueueModel>? onSendingError;
   ValueChanged<QueueModel>? onError;
@@ -35,6 +36,7 @@ class LocalPostManagement {
 
   LocalPostManagement({
     this.onError,
+    this.onSendding,
     this.onSendingSuccess,
     this.onSendingError,
   }) {
@@ -243,6 +245,7 @@ class LocalPostManagement {
             queueController.add(queue);
             //read data and will store to PostModel field
             queueModel.readData;
+            onSendding?.call(queueModel);
 
             //check aapakah reolace header tidak null
             var replacementHeader = replaceHeader?.call() ?? {};
