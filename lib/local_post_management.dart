@@ -23,9 +23,9 @@ class LocalPostManagement {
       StreamController<List<QueueModel>>.broadcast();
   StreamController<QueueStatus> queueStatusController =
       StreamController<QueueStatus>.broadcast();
-  ValueChanged<QueueModel> onSendingSuccess = (QueueModel status) {};
-  ValueChanged<QueueModel> onSendingError = (QueueModel status) {};
-  ValueChanged<QueueModel> onError = (QueueModel status) {};
+  ValueChanged<QueueModel>? onSendingSuccess;
+  ValueChanged<QueueModel>? onSendingError;
+  ValueChanged<QueueModel>? onError;
   bool? isSequential;
   String? name;
   bool? removeData;
@@ -33,7 +33,11 @@ class LocalPostManagement {
   Duration delayed = const Duration(seconds: 2);
   List<int> skipSquential = [];
 
-  LocalPostManagement() {
+  LocalPostManagement({
+    this.onError,
+    this.onSendingSuccess,
+    this.onSendingError,
+  }) {
     queueStatusController.add(queueStatus);
   }
 
@@ -282,7 +286,7 @@ class LocalPostManagement {
               queueController.add(queue);
               //jalankan antrian berikutnya
               //send callback
-              onSendingSuccess(queueModel);
+              onSendingSuccess?.call(queueModel);
               //end callback
               runQueue();
             }).catchError((error) {
@@ -308,7 +312,7 @@ class LocalPostManagement {
                 //notify ke controller
                 queueController.add(queue);
                 //send callback
-                onError(queueModel);
+                onError?.call(queueModel);
                 //end callback
                 runQueue();
               } else {
@@ -346,7 +350,7 @@ class LocalPostManagement {
             //notify ke controller
             queueController.add(queue);
             //send callback
-            onError(queueModel);
+            onError?.call(queueModel);
             //end callback
             runQueue();
           }
