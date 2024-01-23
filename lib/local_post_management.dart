@@ -263,7 +263,7 @@ class LocalPostManagement {
             ).then((value) {
               //update sttus antrian menjadi success
               queueModel.status = 'success';
-              postModel.response = json.decode(json.encode(value));
+              postModel.response = json.encode(value);
               queueModel.uploadedDate = DateTime.now();
               //tulis ke file
               File(queueModel.filePath ?? "")
