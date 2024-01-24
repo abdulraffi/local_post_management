@@ -300,6 +300,10 @@ class LocalPostManagement {
               queueModel.postModel!.lastTryDate = DateTime.now();
 
               queueModel.save();
+
+              //call onsending error
+              onSendingError?.call(queueModel);
+
               //rename file name
 
               //jika jenis antrian sequential di nontaifkan maka antrian akan dilanjutkan dan antrian ini di set ke faied
