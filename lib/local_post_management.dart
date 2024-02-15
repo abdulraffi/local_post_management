@@ -278,6 +278,8 @@ class LocalPostManagement {
                 File(queueModel.filePath ?? "").deleteSync();
                 //hapus antrian dari list antrian
                 queue.remove(queueModel);
+                //hapus dari file
+                deleteQueue(queueModel.id ?? "");
               } else {
                 //rename file name
                 queueModel.uploadedDate = DateTime.now();
