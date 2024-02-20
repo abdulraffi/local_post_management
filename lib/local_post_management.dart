@@ -275,9 +275,10 @@ class LocalPostManagement {
               queueController.add(queue);
               if (removeData == true) {
                 //hapus file antrian
-                File(queueModel.filePath ?? "").deleteSync();
-                //hapus antrian dari list antrian
-                queue.remove(queueModel);
+                File(queueModel.filePath ?? "").delete().then((value) {
+                  //hapus antrian dari list antrian
+                  queue.remove(queueModel);
+                });
               } else {
                 //rename file name
                 queueModel.uploadedDate = DateTime.now();
