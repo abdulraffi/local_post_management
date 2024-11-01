@@ -117,6 +117,7 @@ class LocalPostManagement {
       //ambil file pertama
       for (FileSystemEntity file in value) {
         String fileName = file.path.split('/').last.split('.').first;
+        print('${file.path} - Last Modified: ${file.statSync().modified}');
         try {
           queue.add(QueueModel(
             id: fileName.split('#')[0],
